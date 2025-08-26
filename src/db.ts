@@ -1,7 +1,8 @@
-import 'dotenv/config';          
+import { config } from "./env";
+          
 import { Pool } from 'pg';
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: config.DATABASE_URI,
 });
 
 export async function initDb() {
