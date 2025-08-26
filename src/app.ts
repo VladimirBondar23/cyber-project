@@ -1,3 +1,4 @@
+import "./logging/Logger"
 import express from 'express';
 import { pool, initDb } from './db';
 import firewallRouter from "./routes/firewall";

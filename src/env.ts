@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+import "dotenv/config";
 // Define schema for environment variables
 const envSchema = z.object({
   ENV: z.enum(["dev", "production"]),
