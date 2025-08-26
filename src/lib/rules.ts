@@ -1,6 +1,8 @@
 import net from "node:net";
-import { pool } from "../db";
 import { Mode, RuleType } from "../types";
+import { db } from "../db/db";
+import { firewallRules } from "../db/schema";
+import { and, eq, inArray } from "drizzle-orm";
 
 /* ---------- parsing / validation ---------- */
 export function parseType(raw: string | undefined): RuleType | null {
@@ -17,7 +19,7 @@ const isValidPort = (v: number | string) => {
 const isValidDomain = (v: string) =>
   /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(v);
 
-export function normalizeValues(type: RuleType, values: (string | number)[]): string[] {
+export function normalizeValues(_type: RuleType, values: (string | number)[]): string[] {
   return values.map(v => String(v).trim());
 }
 
@@ -32,30 +34,29 @@ export function validateValues(type: RuleType, values: (string | number)[]) {
   return errors;
 }
 
-/* ---------- DB helpers ---------- */
 export async function upsertRules(type: RuleType, mode: Mode, values: string[]) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query(
-      `INSERT INTO firewall_rules(type, mode, value)
-       SELECT $1, $2, v FROM unnest($3::text[]) AS t(v)
-       ON CONFLICT (type, mode, value) DO UPDATE SET active = TRUE`,
-      [type, mode, [...new Set(values)]]
-    );
-    await client.query("COMMIT");
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
-  } finally {
-    client.release();
-  }
+  const uniq = Array.from(new Set(values));
+  if (uniq.length === 0) return;
+
+  await db
+    .insert(firewallRules)
+    .values(uniq.map(v => ({ type, mode, value: v })))
+    .onConflictDoUpdate({
+      target: [firewallRules.type, firewallRules.mode, firewallRules.value],
+      set: { active: true }, 
+    });
 }
 
 export async function deleteRules(type: RuleType, mode: Mode, values: string[]) {
-  await pool.query(
-    `DELETE FROM firewall_rules
-     WHERE type = $1 AND mode = $2 AND value = ANY($3::text[])`,
-    [type, mode, values]
-  );
+  if (values.length === 0) return;
+
+  await db
+    .delete(firewallRules)
+    .where(
+      and(
+        eq(firewallRules.type, type),
+        eq(firewallRules.mode, mode),
+        inArray(firewallRules.value, values)
+      )
+    );
 }

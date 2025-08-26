@@ -1,6 +1,6 @@
 import "./logging/Logger"
 import express from 'express';
-import { pool, initDb } from './db';
+import { initDb } from './db/db';
 import firewallRouter from "./routes/firewall";
 import { config } from "./env";
 const app = express();

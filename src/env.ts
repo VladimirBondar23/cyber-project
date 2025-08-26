@@ -6,6 +6,7 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).refine(p => p > 0 && p < 65536, { message: "PORT must be a valid port number (1-65535)" }),
   DATABASE_URI_DEV: z.string().url({ message: "DATABASE_URI_DEV must be a valid URL" }),
   DATABASE_URI_PRODUCTION: z.string().url({ message: "DATABASE_URI_PRODUCTION must be a valid URL" }),
+  DB_CONNECTION_INTERVAL: z.string().transform(Number).refine(n => n > 0, { message: "DB_CONNECTION_INTERVAL must be a positive number" }),
 });
 
 // Parse and validate environment variables
@@ -16,7 +17,7 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-const { ENV, PORT, DATABASE_URI_DEV, DATABASE_URI_PRODUCTION } = parsed.data;
+const { ENV, PORT, DATABASE_URI_DEV, DATABASE_URI_PRODUCTION, DB_CONNECTION_INTERVAL } = parsed.data;
 
 // Select the correct database URI based on ENV
 const DATABASE_URI = ENV === "dev" ? DATABASE_URI_DEV : DATABASE_URI_PRODUCTION;
@@ -30,4 +31,5 @@ export const config = {
   PORT,
   DATABASE_URI,
   TABLE_FIREWALL,
+  DB_CONNECTION_INTERVAL,
 };

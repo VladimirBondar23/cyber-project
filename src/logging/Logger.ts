@@ -23,6 +23,17 @@ const transports = isDev
       }),
     ];
 
+function formatArgs(args: any[]) {
+  return args
+    .map(a =>
+      typeof a === "object" && a !== null
+        ? JSON.stringify(a, null, 2)
+        : String(a)
+    )
+    .join(" ");
+}
+
+
 // Create the logger instance
 export const logger = winston.createLogger({
   level: logLevel,
@@ -37,8 +48,8 @@ logger.on("error", (err) => {
 });
 
 // Overwrite standard console.log, console.error, etc.
-console.log = (...args) => logger.info(args.map(String).join(" "));
-console.info = (...args) => logger.info(args.map(String).join(" "));
-console.warn = (...args) => logger.warn(args.map(String).join(" "));
-console.error = (...args) => logger.error(args.map(String).join(" "));
-console.debug = (...args) => logger.debug(args.map(String).join(" "));
+console.log = (...args) => logger.info(formatArgs(args));
+console.info = (...args) => logger.info(formatArgs(args));
+console.warn = (...args) => logger.warn(formatArgs(args));
+console.error = (...args) => logger.error(formatArgs(args));
+console.debug = (...args) => logger.debug(formatArgs(args));
