@@ -17,8 +17,10 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.listen(config.PORT, () => {
-  console.log(`Server is running on http://localhost:${config.PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(config.PORT, () => {
+    console.log(`Server is running on http://localhost:${config.PORT}`);
+  });
+}
 
-
+export default app;
