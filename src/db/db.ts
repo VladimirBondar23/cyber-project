@@ -3,14 +3,29 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "../env";
 import * as schema from "./schema";
 
+// Singleton Database Connection
+class DbSingleton {
+  private static clientInstance: ReturnType<typeof postgres>;
+  private static dbInstance: ReturnType<typeof drizzle>;
+  private constructor() {}
+  public static getClient() {
+    if (!DbSingleton.clientInstance) {
+      DbSingleton.clientInstance = postgres(config.DATABASE_URI, {
+        onnotice: () => {},
+      });
+    }
+    return DbSingleton.clientInstance;
+  }
+  public static getDb() {
+    if (!DbSingleton.dbInstance) {
+      DbSingleton.dbInstance = drizzle(DbSingleton.getClient(), { schema });
+    }
+    return DbSingleton.dbInstance;
+  }
+}
 
-// Create postgres-js client
-export const client = postgres(config.DATABASE_URI, {
-  onnotice: () => {}, 
-});
-
-// Create Drizzle ORM client (typed via schema)
-export const db = drizzle(client, { schema });
+export const client = DbSingleton.getClient();
+export const db = DbSingleton.getDb();
 
 export async function initDb(): Promise<void> {
   let connected = false;
