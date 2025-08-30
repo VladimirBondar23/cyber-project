@@ -12,7 +12,6 @@ initDb().catch(err => {
 });
 
 app.use("/api/firewall", firewallRouter);
-
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
